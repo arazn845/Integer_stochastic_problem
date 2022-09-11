@@ -1,7 +1,7 @@
 sub_for_dual = Model(GLPK.Optimizer) 
 @variable(sub_for_dual, α[1:H,1:J,1:Tˢ])
 @variable(sub_for_dual, 0 ≤ γ[1:J , 1:Tˢ])
-@objective(sub, Min,  sum(zᶜ[j] * γ[j,t] for j in 1:J for t in 1:Tˢ  ) )
+@objective(sub_for_dual, Min,  sum(zᶜ[j] * γ[j,t] for j in 1:J for t in 1:Tˢ  ) )
 for h in 1:H
         for j in 1:J
             for t in 1:Tˢ
