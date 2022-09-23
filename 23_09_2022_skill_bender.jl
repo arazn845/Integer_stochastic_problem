@@ -266,8 +266,9 @@ for k = 1:10
     lb = objective_value(main)
     ψ = value.(ψ)
     χ = value.(χ)
+    l = value.(sub_for_α(ψ , χ)[1] ) 
     γ = value.(sub_for_α(ψ , χ)[2] )
-    λ = sub_dual(ψ , χ)
+    λ = sub_dual(ψ , χ , l)
     A1 = sub_coeff(ψ , χ)
     ub = sum( zᵖ[h] * ψ[h,j] * (Tᵈ + Tˢ) + zᵐ[h,j] * χ[h,j]   for h in 1:H for j in 1:J) + 
         (1/Ξ) * sum(zᶜ[j] * γ[j,t,ξ] for j in 1:J for t in 1:Tˢ for ξ in 1:Ξ)      
