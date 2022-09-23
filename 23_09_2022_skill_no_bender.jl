@@ -38,15 +38,12 @@ d = [
 
 Random.seed!(1234)
 
-μ = [1.2, 0.8, 0.6]
+#μ = [1.2, 1.8, 1.6]
+#Σ = [0.5 0.0 0.0; 0.0 0.5 0.0; 0.0 0.0 0.5]
+#dξ = reshape(rand(MvNormal(μ,Σ), Ξ ), (J,Tˢ,Ξ) )
+#dξ = round.(dξ , digits = 2)
 
-Σ = [0.5 0.0 0.0;
-     0.0 0.5 0.0;
-     0.0 0.0 0.5
-    ]
-
-dξ = reshape(rand(MvNormal(μ,Σ), Ξ ), (J,Tˢ,Ξ) )
-dξ = round.(dξ , digits = 2)
+dξ = [1.2 , 1.8 , 3.2]
 
 χᵐᵃˣ = fill(1, H ,J)
 
@@ -143,16 +140,52 @@ skill = Model(GLPK.Optimizer)
 #####################################
 optimize!(skill);
 
-println("objective value : ", objective_value(skill))
 
 
+##############################
+# data frames for ψ, χ, γξ
 
 df_ψ = DataFrame(value.(ψ), :auto)
 @show df_ψ 
 
-df_χ = DataFrame(value.(χ), :auto)
+df_χ = DataFrame(round.(value.(χ) , digits = 2), :auto)
 @show df_χ
+
+df_γξ = DataFrame(value.(γξ)[: , : , 1] , :auto  )
+@show df_γξ
+
+##########################
+# objective
+
+println("")
+println("***************************************")
+println("******* objective values **************")
+println("***************************************")
+ψ = value.(ψ)
+χ = value.(χ)
+obj_stage_1 = sum( zᵖ[h] * ψ[h,j] * (Tᵈ + Tˢ) for h in 1:H for j in 1:J ) + sum(zᵐ[h,j] * χ[h,j] for h in 1:H for j in 1:J )
+
+recruitment_cost = sum( zᵖ[h] * ψ[h,j] * (Tᵈ + Tˢ) for h in 1:H for j in 1:J ) 
+trainging_cost = sum(zᵐ[h,j] * χ[h,j] for h in 1:H for j in 1:J )
+
+γξ = value.(γξ)
+obj_stage_2 = (1/Ξ) * sum(zᶜ[j] * γξ[j,t,ξ] for j in 1:J for t in 1:Tˢ for ξ in 1:Ξ)
+
+@show obj_stage_1
+@show obj_stage_2
+@show recruitment_cost
+@show trainging_cost
+
+println("objective value : ", objective_value(skill))
+
+println("")
+println("***************************************")
+println("******* workforce **************")
+println("***************************************")
 
 println("total number of recruited workforce : ", sum(value.(ψ)) )
 
 println("total amount of secondary skills : ", sum(round.(value.(χ), digits = 2) ) )
+println("total amount of casual hours" , sum(value.(γξ)))
+
+println("total multiskilled workforce movement: " , sum(abs.(value.(α)[:,:,1] - value.(αξ)[: , : , 1, 1]) ))
