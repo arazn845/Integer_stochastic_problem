@@ -167,8 +167,7 @@ end
 
 
 
-function sub_dual(ψ , χ)
-    l = sub_for_α(ψ , χ)[1]
+function sub_dual(ψ , χ, l)
     sub_for_dual = Model(GLPK.Optimizer) 
     @variable(sub_for_dual,  α[1:H,1:J,1:Tˢ , 1:Ξ])
     @variable(sub_for_dual, 0 ≤ γ[1:J , 1:Tˢ , 1:Ξ])
