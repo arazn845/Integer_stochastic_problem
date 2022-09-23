@@ -38,15 +38,12 @@ d = [
 
 Random.seed!(1234)
 
-μ = [1.2, 0.8, 0.6]
+#μ = [1.2, 1.8, 1.6]
+#Σ = [0.5 0.0 0.0; 0.0 0.5 0.0; 0.0 0.0 0.5]
+#dξ = reshape(rand(MvNormal(μ,Σ), Ξ ), (J,Tˢ,Ξ) )
+#dξ = round.(dξ , digits = 2)
 
-Σ = [0.5 0.0 0.0;
-     0.0 0.5 0.0;
-     0.0 0.0 0.5
-    ]
-
-dξ = reshape(rand(MvNormal(μ,Σ), Ξ ), (J,Tˢ,Ξ) )
-dξ = round.(dξ , digits = 2)
+dξ = [1.2 , 1.8 , 3.2]
 
 χᵐᵃˣ = fill(1, H ,J)
 
@@ -77,6 +74,8 @@ for h=4
 end
 
 ;
+
+
 
 #########################################
 # main model
@@ -127,7 +126,6 @@ con5_s1 = @constraint(main, training_recruited[ h in 1:H ],
     sum(χ[h,j] for j in 1:J ) ≤ sum(ψ[h,j] for j in 1:J) * J  );
 
 
-
 ################################################
 # this function optimize the sub problem and generates the value for α_{h,j,t,ξ}
 ################################################
@@ -153,9 +151,8 @@ function sub_for_α(ψ , χ)
     return (α , γ , o)
 end
 
-@show sub_for_α(ψ , χ)[1]
-@show sub_for_α(ψ , χ)[2]
-@show sub_for_α(ψ , χ)[3]
+
+
 
 ################################################################
 # defining a function for second stage integer dual
@@ -167,10 +164,11 @@ end
 ###########################################
 ###############################################################
 
-l = sub_for_α(ψ , χ)[1]
+
 
 
 function sub_dual(ψ , χ)
+    l = sub_for_α(ψ , χ)[1]
     sub_for_dual = Model(GLPK.Optimizer) 
     @variable(sub_for_dual,  α[1:H,1:J,1:Tˢ , 1:Ξ])
     @variable(sub_for_dual, 0 ≤ γ[1:J , 1:Tˢ , 1:Ξ])
@@ -207,14 +205,14 @@ function sub_dual(ψ , χ)
     no_con_equal = length(con_equal)
     no_con_less = length(con_less)
     no_all_con = no_con_equal + no_con_less;
-    @show no_con_equal
-    @show no_con_less
-    @show no_all_con;
+    #@show no_con_equal
+    #@show no_con_less
+    #@show no_all_con;
     
     return λ
 end
 
-sub_dual(ψ , χ);
+
 
 #############################################
 # function for coefficients of  𝜓  and  𝜒
@@ -260,7 +258,7 @@ function sub_coeff(ψ , χ)
     return A1
 end
 
-sub_coeff(ψ , χ)   
+
 
 println("        k  upper bound   lower bound  gap")
 for k = 1:10
