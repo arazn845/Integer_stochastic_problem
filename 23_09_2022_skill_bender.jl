@@ -126,6 +126,7 @@ con5_s1 = @constraint(main, training_recruited[ h in 1:H ],
     sum(χ[h,j] for j in 1:J ) ≤ sum(ψ[h,j] for j in 1:J) * J  );
 
 
+
 ################################################
 # this function optimize the sub problem and generates the value for α_{h,j,t,ξ}
 ################################################
@@ -152,8 +153,6 @@ function sub_for_α(ψ , χ)
 end
 
 
-
-
 ################################################################
 # defining a function for second stage integer dual
 ###########################################
@@ -167,7 +166,7 @@ end
 
 
 
-function sub_dual(ψ , χ, l)
+function sub_dual(ψ , χ)
     sub_for_dual = Model(GLPK.Optimizer) 
     @variable(sub_for_dual,  α[1:H,1:J,1:Tˢ , 1:Ξ])
     @variable(sub_for_dual, 0 ≤ γ[1:J , 1:Tˢ , 1:Ξ])
@@ -176,7 +175,7 @@ function sub_dual(ψ , χ, l)
             for j in 1:J
                 for t in 1:Tˢ
                     for ξ in 1:Ξ
-                        if l[h,j,t,ξ] == 0
+                        if (sub_for_α(ψ , χ)[1])[: , : , 1 , 1] == 0
                             con = @constraint(sub_for_dual, α[h,j,t,ξ] == 0)
                         else
                             con = @constraint(sub_for_dual, α[h,j,t,ξ] == 1)
@@ -228,7 +227,7 @@ function sub_coeff(ψ , χ)
             for j in 1:J
                 for t in 1:Tˢ
                     for ξ in 1:Ξ
-                        if l[h,j,t,ξ] == 0
+                        if (sub_for_α(ψ , χ)[1])[: , : , 1,  1] == 0
                             con = @constraint(sub_for_coeff, α[h,j,t,ξ] == 0)
                         else
                             con = @constraint(sub_for_coeff, α[h,j,t,ξ] == 1)
@@ -259,15 +258,16 @@ end
 
 
 
+
+
 println("        k  upper bound   lower bound  gap")
 for k = 1:10
     optimize!(main)
     lb = objective_value(main)
     ψ = value.(ψ)
     χ = value.(χ)
-    l = value.(sub_for_α(ψ , χ)[1] ) 
     γ = value.(sub_for_α(ψ , χ)[2] )
-    λ = sub_dual(ψ , χ , l)
+    λ = sub_dual(ψ , χ )
     A1 = sub_coeff(ψ , χ)
     ub = sum( zᵖ[h] * ψ[h,j] * (Tᵈ + Tˢ) + zᵐ[h,j] * χ[h,j]   for h in 1:H for j in 1:J) + 
         (1/Ξ) * sum(zᶜ[j] * γ[j,t,ξ] for j in 1:J for t in 1:Tˢ for ξ in 1:Ξ)      
